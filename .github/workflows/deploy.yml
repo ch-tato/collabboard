@@ -61,17 +61,22 @@ jobs:
           sudo dpkg -i cloudflared.deb
 
       - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          printf "%s\n" "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           cat >> ~/.ssh/config <<EOF
           Host deploy-server
             HostName ssh.lixyon.me
-            User ${{ secrets.SSH_USER }}
+            User $SSH_USER
             IdentityFile ~/.ssh/id_ed25519
             ProxyCommand cloudflared access ssh --hostname %h
             StrictHostKeyChecking no
+            PubkeyAcceptedKeyTypes +ssh-rsa
+            HostkeyAlgorithms +ssh-rsa
           EOF
 
       - name: Deploy via SSH
