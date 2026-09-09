@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CollabBoard — Real-time Collaborative Whiteboard</title>
+    <meta name="description" content="CollabBoard is a real-time collaborative whiteboard for teams to draw, annotate, and brainstorm together.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+
+        <!-- TOOLBAR — Floating top bar -->
+        <header id="toolbar">
+            <div class="toolbar__section toolbar__section--left">
+                <button id="toolbar-menu-btn" class="toolbar__btn toolbar__brand" title="CollabBoard Menu" aria-label="Menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                </button>
+                <span id="toolbar-room-name" class="toolbar__room-name">CollabBoard</span>
+            </div>
+
+            <div class="toolbar__section toolbar__section--center">
+                <div class="toolbar__tool-group">
+                    <button id="tool-select" class="toolbar__btn toolbar__tool active" data-tool="select" title="Select (V)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>
+                    </button>
+                    <div class="toolbar__separator"></div>
+                    <button id="tool-pencil" class="toolbar__btn toolbar__tool" data-tool="pencil" title="Pencil (P)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                    </button>
+                    <button id="tool-text" class="toolbar__btn toolbar__tool" data-tool="text" title="Text (T)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                    </button>
+                    <div style="position: relative; display: flex;">
+                        <button id="tool-shapes" class="toolbar__btn toolbar__tool" data-tool="rectangle" title="Shapes (S)">
+                            <svg id="tool-shapes-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; bottom: 2px; right: 2px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div class="popover" id="shapes-popover" aria-hidden="true">
+                            <button class="popover__item" data-tool="rectangle" title="Rectangle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></button>
+                            <button class="popover__item" data-tool="circle" title="Circle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg></button>
+                            <button class="popover__item" data-tool="line" title="Line"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/></svg></button>
+                            <button class="popover__item" data-tool="arrow" title="Arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/></svg></button>
+                            <button class="popover__item" data-tool="heart" title="Heart"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+                        </div>
+                    </div>
+                    <button id="tool-image" class="toolbar__btn toolbar__tool" data-tool="image" title="Image (I)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </button>
+                    <div id="stroke-separator" class="toolbar__separator"></div>
+                    
+                    <!-- Stroke controls -->
+                    <div id="stroke-controls" style="display: flex; align-items: center; gap: 2px;" title="Stroke Color">
+                        <button id="tool-stroke-toggle" class="toolbar__btn active">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                        </button>
+                        <div class="toolbar__color-wrapper">
+                            <input type="color" id="tool-stroke-color" class="toolbar__color-input" value="#1a1a2e">
+                            <div class="toolbar__color-swatch" id="tool-stroke-swatch"></div>
+                        </div>
+                    </div>
+                    
+                    <select id="tool-stroke-width" class="toolbar__select" title="Stroke Width">
+                        <option value="2">2px</option>
+                        <option value="4" selected>4px</option>
+                        <option value="6">6px</option>
+                        <option value="8">8px</option>
+                        <option value="12">12px</option>
+                    </select>
+
+                    <select id="tool-font-size" class="toolbar__select" title="Font Size" style="display: none;">
+                        <option value="16">S (16px)</option>
+                        <option value="24" selected>M (24px)</option>
+                        <option value="36">L (36px)</option>
+                        <option value="48">XL (48px)</option>
+                        <option value="72">XXL (72px)</option>
+                    </select>
+
+                    <div id="fill-separator" class="toolbar__separator"></div>
+
+                    <!-- Fill controls -->
+                    <div id="fill-controls" style="display: flex; align-items: center; gap: 2px;" title="Fill Color">
+                        <button id="tool-fill-toggle" class="toolbar__btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                        </button>
+                        <div class="toolbar__color-wrapper">
+                            <input type="color" id="tool-fill-color" class="toolbar__color-input" value="#5b5fc7">
+                            <div class="toolbar__color-swatch" id="tool-fill-swatch"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toolbar__section toolbar__section--right">
+                <div id="toolbar-participants" class="toolbar__participants"></div>
+                <div class="toolbar__separator"></div>
+                <button id="toolbar-export-btn" class="toolbar__btn" title="Export as PNG">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </button>
+                <button id="toolbar-sidebar-toggle" class="toolbar__btn" title="Participants (U)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </button>
+                <div style="position: relative; display: flex;">
+                    <button id="toolbar-more-btn" class="toolbar__btn" title="More Options">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                    </button>
+                    <div class="dropdown" id="more-options-dropdown" aria-hidden="true">
+                        <button id="menu-export-collab" class="dropdown__item">Export .collab</button>
+                        <button id="menu-import-collab" class="dropdown__item">Import .collab</button>
+                        <div class="dropdown__divider" style="height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0;"></div>
+                        <button id="menu-leave-room" class="dropdown__item" style="color: #ff4d4f; font-weight: 500;">Leave Room</button>
+                    </div>
+                    <input type="file" id="import-file" accept=".collab,.json" class="sr-only">
+                </div>
+            </div>
+        </header>
+
+        <!-- CANVAS CONTAINER — Dot-grid background + HTML5 Canvas -->
+        <main id="canvas-container">
+            <canvas id="canvas" width="1920" height="1080"></canvas>
+            <div id="cursor-overlay"></div>
+        </main>
+
+        <!-- SIDEBAR — Participant list (hidden by default) -->
+        <aside id="sidebar" class="sidebar" aria-hidden="true">
+            <div class="sidebar__header">
+                <h2 class="sidebar__title">Participants</h2>
+                <button id="sidebar-close-btn" class="toolbar__btn sidebar__close" title="Close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <ul id="sidebar-participant-list" class="sidebar__list"></ul>
+        </aside>
+
+        <!-- STATUS BAR — Connection state, room code, save status -->
+        <footer id="status-bar">
+            <div class="status-bar__section status-bar__section--left">
+                <span id="status-connection" class="status-bar__indicator status-bar__indicator--disconnected">
+                    <span class="status-bar__dot"></span>
+                    Disconnected
+                </span>
+            </div>
+            <div class="status-bar__section status-bar__section--center">
+                <span id="status-room" class="status-bar__room" style="cursor: pointer;" title="Click to copy room code">No room</span>
+            </div>
+            <div class="status-bar__section status-bar__section--right">
+                <span id="status-save" class="status-bar__save">—</span>
+                <span id="status-users" class="status-bar__users">0 users</span>
+            </div>
+        </footer>
+
+        <!-- ROOM MODAL — Join / Create room dialog (wired Day 3) -->
+        <div id="room-modal" class="modal" aria-hidden="true">
+            <div class="modal__backdrop"></div>
+            <div class="modal__card">
+                <div class="modal__tabs">
+                    <button id="modal-tab-create" class="modal__tab active">Create</button>
+                    <button id="modal-tab-join" class="modal__tab">Join</button>
+                </div>
+                <div class="modal__form">
+                    <div class="modal__field">
+                        <label for="modal-username" class="modal__label">Display Name</label>
+                        <input type="text" id="modal-username" class="modal__input" placeholder="e.g. Aiko" maxlength="32" autocomplete="off">
+                    </div>
+                    <div class="modal__field" id="modal-field-room-code" style="display: none;">
+                        <label for="modal-room-code" class="modal__label">Room Code</label>
+                        <input type="text" id="modal-room-code" class="modal__input" placeholder="e.g. A1B2C3" maxlength="6" autocomplete="off">
+                    </div>
+                    <p id="modal-error" class="modal__error" aria-live="polite"></p>
+                    <div class="modal__actions">
+                        <button id="modal-create-btn" class="modal__btn modal__btn--primary">Create Room</button>
+                        <button id="modal-join-btn" class="modal__btn modal__btn--primary" style="display: none;">Join Room</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEAVE MODAL -->
+        <div id="leave-modal" class="modal" aria-hidden="true">
+            <div class="modal__backdrop"></div>
+            <div class="modal__card" style="max-width: 400px; text-align: center;">
+                <h2 class="modal__title">Leave Room?</h2>
+                <p class="modal__subtitle" style="margin-bottom: 24px;">Are you sure you want to leave this room? You will need the room code to rejoin.</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button id="leave-cancel-btn" class="modal__btn modal__btn--secondary" style="flex: 1;">Cancel</button>
+                    <button id="leave-proceed-btn" class="modal__btn modal__btn--primary" style="flex: 1; background-color: #dc3545; border-color: #dc3545;">Leave</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- EASTER EGG MODAL -->
+        <div id="easter-egg-modal" class="modal" aria-hidden="true">
+            <div class="modal__backdrop"></div>
+            <div class="modal__card" style="max-width: 400px; text-align: center;">
+                <h2 class="modal__title">🎉 Easter Egg Found!</h2>
+                <p class="modal__subtitle" style="margin-bottom: 24px;">iya iya sherlock, kamu berhasil nemu easter egg-nya. selamat yh. sana lanjut gambar</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button id="easter-egg-close-btn" class="modal__btn modal__btn--primary" style="flex: 1;">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HIDDEN FILE INPUT for Image Tool -->
+        <input type="file" id="image-upload-input" accept="image/png, image/jpeg, image/webp" style="display: none;">
+
+        <div id="toast" class="toast" aria-hidden="true"></div>
+    </div>
+    <script src="js/network.js"></script>
+    <script src="js/geometry.js"></script>
+    <script src="js/canvas.js"></script>
+    <script src="js/tools.js"></script>
+    <script src="js/undo.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/ui.js"></script>
+</body>
+</html>

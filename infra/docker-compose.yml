@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "127.0.0.1:8080:80" # Host-level cloudflared ingress needs to point at localhost:8080
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend-1:
+        condition: service_healthy
+      backend-2:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend-1:
+    image: ghcr.io/${GITHUB_REPOSITORY_LOWERCASE}:latest
+    environment:
+      - DATABASE_URL=postgresql://collabboard:${POSTGRES_PASSWORD}@postgres:5432/collabboard
+      - REDIS_URL=redis://redis:6379/0
+      - SERVER_ID=backend-1
+    volumes:
+      - uploads:/app/data/canvases
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend-2:
+    image: ghcr.io/${GITHUB_REPOSITORY_LOWERCASE}:latest
+    environment:
+      - DATABASE_URL=postgresql://collabboard:${POSTGRES_PASSWORD}@postgres:5432/collabboard
+      - REDIS_URL=redis://redis:6379/0
+      - SERVER_ID=backend-2
+    volumes:
+      - uploads:/app/data/canvases
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: collabboard
+      POSTGRES_USER: collabboard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U collabboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:

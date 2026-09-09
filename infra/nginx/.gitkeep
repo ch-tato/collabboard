@@ -1,0 +1,12 @@
+# CollabBoard — Nginx Config (Placeholder)
+# =============================================================================
+# This directory will contain Nginx config files:
+#   - default.conf      (production — ip_hash upstream, WSS proxy)
+#   - nginx.dev.conf    (development — single backend at host.docker.internal)
+#
+# These will be created when the Nginx service is added to Docker Compose
+# (Day 10–11, M1).
+#
+# Reference:
+#   - DEVOPS_ARCHITECTURE.md §5 (Reverse Proxy Design)
+#   - DOCKER_DEPLOYMENT.md §3 (Bind Mounts)

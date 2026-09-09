@@ -1,0 +1,2 @@
+[default]
+python_interpreter = ".venv/bin/python"

@@ -1,0 +1,1075 @@
+/* =============================================================================
+   CollabBoard — Master Stylesheet
+   =============================================================================
+   Owner : M2 (Frontend Engineer)
+   Sprint: Day 1
+
+   Layout: Full-viewport canvas with floating toolbar overlay.
+   Theme:  CSS custom properties with light (default) + dark mode support.
+   Grid:   No sidebar column — sidebar slides in as overlay (Day 3).
+
+   Reference:
+     - IMPLEMENTATION_PLAN.md §F1
+     - SPECIFICATION.md §6.2
+     - UI reference image (floating card toolbar, dot-grid canvas)
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   0. CSS Custom Properties — Design Tokens
+   --------------------------------------------------------------------------- */
+:root {
+    /* ---- Typography ---- */
+    --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* ---- Spacing scale ---- */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 12px;
+    --space-lg: 16px;
+    --space-xl: 24px;
+    --space-2xl: 32px;
+
+    /* ---- Radii ---- */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* ---- Shadows ---- */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+    --shadow-toolbar: 0 2px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+
+    /* ---- Transitions ---- */
+    --transition-fast: 120ms ease;
+    --transition-normal: 200ms ease;
+    --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ---- Z-index layers ---- */
+    --z-canvas: 1;
+    --z-cursor-overlay: 10;
+    --z-toolbar: 100;
+    --z-sidebar: 200;
+    --z-status-bar: 50;
+    --z-modal-backdrop: 900;
+    --z-modal: 1000;
+}
+
+/* ---- Light Theme (default) ---- */
+[data-theme="light"] {
+    --color-bg: #f5f5f0;
+    --color-surface: #ffffff;
+    --color-surface-hover: #f0f0ec;
+    --color-surface-active: #e8e8e3;
+    --color-border: #e2e2dd;
+    --color-border-subtle: #ececea;
+
+    --color-text-primary: #1a1a1f;
+    --color-text-secondary: #6b6b76;
+    --color-text-tertiary: #9e9ea8;
+    --color-text-inverse: #ffffff;
+
+    --color-accent: #5b5fc7;
+    --color-accent-hover: #4a4eb5;
+    --color-accent-light: #ededfa;
+
+    --color-success: #2d9d5c;
+    --color-warning: #d4930d;
+    --color-error: #d93036;
+
+    --color-dot-grid: #d0d0ca;
+    --color-canvas-bg: #f5f5f0;
+
+    --toolbar-bg: rgba(255, 255, 255, 0.92);
+    --toolbar-blur: 12px;
+    --toolbar-border: rgba(0, 0, 0, 0.06);
+
+    --sidebar-bg: rgba(255, 255, 255, 0.96);
+
+    --modal-backdrop: rgba(0, 0, 0, 0.3);
+
+    --status-bar-bg: rgba(255, 255, 255, 0.85);
+}
+
+/* ---- Dark Theme ---- */
+[data-theme="dark"] {
+    --color-bg: #0f0f17;
+    --color-surface: #1a1a28;
+    --color-surface-hover: #232336;
+    --color-surface-active: #2c2c42;
+    --color-border: #2a2a3d;
+    --color-border-subtle: #1f1f30;
+
+    --color-text-primary: #e8e8ed;
+    --color-text-secondary: #9090a0;
+    --color-text-tertiary: #5e5e70;
+    --color-text-inverse: #0f0f17;
+
+    --color-accent: #7b7fde;
+    --color-accent-hover: #9194e8;
+    --color-accent-light: #1e1e3a;
+
+    --color-success: #3dbd6f;
+    --color-warning: #e8a820;
+    --color-error: #ef4444;
+
+    --color-dot-grid: #252538;
+    --color-canvas-bg: #0f0f17;
+
+    --toolbar-bg: rgba(26, 26, 40, 0.92);
+    --toolbar-blur: 12px;
+    --toolbar-border: rgba(255, 255, 255, 0.06);
+
+    --sidebar-bg: rgba(26, 26, 40, 0.96);
+
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+
+    --status-bar-bg: rgba(26, 26, 40, 0.85);
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
+    --shadow-toolbar: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+
+/* ---------------------------------------------------------------------------
+   1. Reset & Base
+   --------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text-primary);
+    background: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+    font-family: inherit;
+    font-size: inherit;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: inherit;
+}
+
+input,
+select {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+
+/* ---------------------------------------------------------------------------
+   2. App Container
+   --------------------------------------------------------------------------- */
+#app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+
+/* ---------------------------------------------------------------------------
+   3. Floating Toolbar
+   --------------------------------------------------------------------------- */
+#toolbar {
+    position: fixed;
+    top: var(--space-md);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--z-toolbar);
+
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-md);
+    height: 48px;
+
+    background: var(--toolbar-bg);
+    backdrop-filter: blur(var(--toolbar-blur));
+    -webkit-backdrop-filter: blur(var(--toolbar-blur));
+    border: 1px solid var(--toolbar-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-toolbar);
+
+    transition: box-shadow var(--transition-normal),
+        background var(--transition-normal);
+}
+
+#toolbar:hover {
+    box-shadow: var(--shadow-md);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(-50%); }
+  20%, 60% { transform: translateX(calc(-50% - 5px)); }
+  40%, 80% { transform: translateX(calc(-50% + 5px)); }
+}
+
+.shake-active {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Toolbar sections */
+.toolbar__section {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.toolbar__section--left {
+    margin-right: var(--space-sm);
+}
+
+.toolbar__section--center {
+    flex: 1;
+    justify-content: center;
+}
+
+.toolbar__section--right {
+    margin-left: var(--space-sm);
+}
+
+.toolbar__tool-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* Toolbar buttons */
+.toolbar__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    transition: background var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
+}
+
+.toolbar__btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}
+
+.toolbar__btn:active {
+    transform: scale(0.95);
+    background: var(--color-surface-active);
+}
+
+.toolbar__btn.active,
+.toolbar__tool.active {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+}
+
+/* Brand button */
+.toolbar__brand {
+    color: var(--color-accent);
+}
+
+/* Room name */
+.toolbar__room-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--color-text-primary);
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: none;
+}
+
+/* Separator */
+.toolbar__separator {
+    width: 1px;
+    height: 20px;
+    background: var(--color-border);
+    margin: 0 var(--space-xs);
+    flex-shrink: 0;
+}
+
+/* Color picker */
+.toolbar__color-wrapper {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.toolbar__color-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.toolbar__color-swatch {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-sm);
+    background: #1a1a2e;
+    border: 2px solid var(--color-border);
+    pointer-events: none;
+    transition: border-color var(--transition-fast);
+}
+
+.toolbar__color-wrapper:hover .toolbar__color-swatch {
+    border-color: var(--color-accent);
+}
+
+/* Stroke width select */
+.toolbar__select {
+    height: 28px;
+    padding: 0 var(--space-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.toolbar__select:hover,
+.toolbar__select:focus {
+    border-color: var(--color-accent);
+}
+
+/* Participant avatars */
+.toolbar__participants {
+    display: flex;
+    align-items: center;
+    gap: -4px;
+}
+
+.toolbar__avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-inverse);
+    margin-left: -6px;
+    transition: transform var(--transition-fast);
+}
+
+.toolbar__avatar:first-child {
+    margin-left: 0;
+}
+
+.toolbar__avatar:hover {
+    transform: scale(1.15);
+    z-index: 1;
+}
+
+
+/* ---------------------------------------------------------------------------
+   4. Canvas Container — Dot-Grid Background
+   --------------------------------------------------------------------------- */
+#canvas-container {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-canvas);
+    overflow: hidden;
+
+    /* Dot-grid pattern via radial gradient */
+    background-color: var(--color-canvas-bg);
+    background-image: radial-gradient(circle, var(--color-dot-grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: 12px 12px;
+}
+
+#canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* Canvas transparent so dot-grid shows through */
+    /* The intrinsic 1920x1080 coords are stretched to fill viewport */
+}
+
+#cursor-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-cursor-overlay);
+    pointer-events: none;
+}
+
+/* Individual remote cursor (managed by CursorManager in canvas.js) */
+.remote-cursor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    will-change: transform;
+    transition: transform 60ms linear;
+    z-index: 1;
+    animation: cursor-appear 150ms ease-out;
+}
+
+.remote-cursor svg {
+    display: block;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+.remote-cursor__label {
+    position: absolute;
+    top: 18px;
+    left: 12px;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    user-select: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    line-height: 1.4;
+}
+
+@keyframes cursor-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+/* ---------------------------------------------------------------------------
+   5. Sidebar — Slide-out Overlay (hidden by default)
+   --------------------------------------------------------------------------- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 100%;
+    z-index: var(--z-sidebar);
+
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-left: 1px solid var(--color-border);
+    box-shadow: var(--shadow-lg);
+
+    transform: translateX(100%);
+    transition: transform var(--transition-smooth);
+
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
+.sidebar[aria-hidden="true"] {
+    transform: translateX(100%);
+}
+
+.sidebar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-lg) var(--space-xl);
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.sidebar__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.sidebar__close {
+    width: 28px;
+    height: 28px;
+}
+
+.sidebar__list {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-sm) var(--space-md);
+}
+
+.sidebar__list-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    transition: background var(--transition-fast);
+}
+
+.sidebar__list-item:hover {
+    background: var(--color-surface-hover);
+}
+
+.sidebar__list-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-inverse);
+    flex-shrink: 0;
+}
+
+.sidebar__list-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+
+/* ---------------------------------------------------------------------------
+   6. Status Bar
+   --------------------------------------------------------------------------- */
+#status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-status-bar);
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-md);
+
+    background: var(--status-bar-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid var(--color-border-subtle);
+
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    user-select: none;
+}
+
+.status-bar__section {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.status-bar__section--center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.status-bar__indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.status-bar__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.status-bar__indicator--connected .status-bar__dot {
+    background: var(--color-success);
+    box-shadow: 0 0 6px rgba(45, 157, 92, 0.5);
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.status-bar__indicator--disconnected .status-bar__dot {
+    background: var(--color-error);
+}
+
+.status-bar__indicator--connecting .status-bar__dot {
+    background: var(--color-warning);
+    animation: pulse-dot 1s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.status-bar__room {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.status-bar__save {
+    color: var(--color-text-tertiary);
+}
+
+.status-bar__users {
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+
+/* ---------------------------------------------------------------------------
+   7. Modal — Room Join / Create
+   --------------------------------------------------------------------------- */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-smooth),
+        visibility var(--transition-smooth);
+}
+
+.modal[aria-hidden="false"] {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--modal-backdrop);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.modal__card {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: var(--space-xl);
+    padding: var(--space-2xl);
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+
+    transform: translateY(8px);
+    transition: transform var(--transition-smooth);
+}
+
+.modal[aria-hidden="false"] .modal__card {
+    transform: translateY(0);
+}
+
+.modal__tabs {
+    display: flex;
+    gap: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    border-bottom: 2px solid var(--color-border);
+}
+
+.modal__tab {
+    padding: var(--space-sm) 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.modal__tab:hover {
+    color: var(--color-text-primary);
+}
+
+.modal__tab.active {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+}
+
+.modal__title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.modal__subtitle {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-xl);
+}
+
+.modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.modal__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.modal__input {
+    height: 40px;
+    padding: 0 var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+.modal__input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+.modal__input::placeholder {
+    color: var(--color-text-tertiary);
+}
+
+.modal__error {
+    font-size: 12px;
+    color: var(--color-error);
+    min-height: 18px;
+}
+
+.modal__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+}
+
+.modal__btn {
+    height: 42px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+.modal__btn:active {
+    transform: scale(0.98);
+}
+
+.modal__btn--primary {
+    background: var(--color-accent);
+    color: var(--color-text-inverse);
+}
+
+.modal__btn--primary:hover {
+    background: var(--color-accent-hover);
+    box-shadow: 0 4px 12px rgba(91, 95, 199, 0.3);
+}
+
+.modal__btn--secondary {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+}
+
+.modal__btn--secondary:hover {
+    background: var(--color-surface-active);
+}
+
+
+/* ---------------------------------------------------------------------------
+   8. Utility Classes
+   --------------------------------------------------------------------------- */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Cursor chat bubble (Day 8 — speech bubble overlay, auto-dismiss after 4s) */
+.cursor-chat-bubble {
+    position: absolute;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-inverse);
+    white-space: normal;
+    width: 200px;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    animation: bubble-appear 200ms ease-out;
+}
+
+.cursor-chat-bubble__message {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.35;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+@keyframes bubble-appear {
+    from {
+        opacity: 0;
+        transform: translateY(4px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes bubble-fade {
+
+    0%,
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Cursor chat input (Day 8 — floating text entry triggered by / key) */
+.cursor-chat-input-wrapper {
+    position: absolute;
+    z-index: 15;
+    /* above cursor-overlay (10), below toolbar (100) */
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    animation: bubble-appear 150ms ease-out;
+}
+
+.cursor-chat-input-slash {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    background: var(--color-accent);
+    color: var(--color-text-inverse);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.cursor-chat-input {
+    width: 220px;
+    min-height: 32px;
+    height: auto;
+    padding: 6px var(--space-md);
+    border: 2px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 13px;
+    font-family: var(--font-primary);
+    outline: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--color-accent-light);
+    transition: box-shadow var(--transition-fast);
+    resize: none;
+    overflow: hidden;
+}
+
+.cursor-chat-input:focus {
+    box-shadow: 0 4px 24px rgba(91, 95, 199, 0.25), 0 0 0 3px var(--color-accent-light);
+}
+
+.cursor-chat-input::placeholder {
+    color: var(--color-text-tertiary);
+    font-size: 12px;
+}
+
+/* Toast notification (future use) */
+.toast {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+    font-size: 13px;
+    color: var(--color-text-primary);
+    opacity: 0;
+    transition: opacity var(--transition-normal),
+        transform var(--transition-normal);
+    z-index: var(--z-modal);
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+/* ---------------------------------------------------------------------------
+   9. Dropdown & Popover Menus (Sprint 1)
+   --------------------------------------------------------------------------- */
+
+/* Dropdown */
+.dropdown {
+    position: absolute;
+    top: calc(100% + var(--space-xs));
+    right: 0;
+    min-width: 160px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-xs);
+    display: flex;
+    flex-direction: column;
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity var(--transition-fast), transform var(--transition-fast), visibility var(--transition-fast);
+}
+
+.dropdown[aria-hidden="false"] {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown__item {
+    padding: var(--space-sm) var(--space-md);
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast);
+}
+
+.dropdown__item:hover {
+    background: var(--color-surface-hover);
+}
+
+/* Popover for shapes */
+.popover {
+    position: absolute;
+    top: calc(100% + var(--space-xs));
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    background: var(--toolbar-bg);
+    backdrop-filter: blur(var(--toolbar-blur));
+    -webkit-backdrop-filter: blur(var(--toolbar-blur));
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-sm);
+    display: flex;
+    gap: 2px;
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-fast), transform var(--transition-fast), visibility var(--transition-fast);
+}
+
+.popover[aria-hidden="false"] {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.popover__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.popover__item:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}

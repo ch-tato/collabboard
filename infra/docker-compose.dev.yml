@@ -1,0 +1,78 @@
+# =============================================================================
+# CollabBoard — Development Docker Compose
+# =============================================================================
+# Owner : M1 (Server & DevOps)
+# Sprint: Day 1
+#
+# Spins up PostgreSQL and Redis for local development.
+# The backend runs on the HOST with hot-reload (uvicorn --reload).
+#
+# Usage:
+#   docker compose -f infra/docker-compose.dev.yml up -d
+#
+# Reference:
+#   - DOCKER_DEPLOYMENT.md §6 (Development Deployment)
+#   - DEVOPS_ARCHITECTURE.md §16 (Dev Topology)
+#   - IMPLEMENTATION_PLAN.md §2 (Infrastructure Bootstrap)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: collabboard-postgres-dev
+    environment:
+      POSTGRES_DB: collabboard
+      POSTGRES_USER: collabboard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "127.0.0.1:5434:5432"   # Host 5434 → Container 5432 (avoids local PG conflict)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../infra/db/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U collabboard" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - collabboard-net
+
+  # ---------------------------------------------------------------------------
+  # Redis 7
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: collabboard-redis-dev
+    ports:
+      - "127.0.0.1:6380:6379"   # Host 6380 → Container 6379 (avoids local Redis conflict)
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - collabboard-net
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  pgdata:
+    name: collabboard-pgdata-dev
+  redisdata:
+    name: collabboard-redisdata-dev
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  collabboard-net:
+    name: collabboard-net-dev
+    driver: bridge
