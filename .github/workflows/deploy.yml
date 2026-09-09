@@ -90,6 +90,9 @@ jobs:
           ssh deploy-server "export GITHUB_REPOSITORY_LOWERCASE='$GITHUB_REPOSITORY_LOWERCASE' POSTGRES_PASSWORD='$POSTGRES_PASSWORD' GHCR_PAT='$GHCR_PAT'; bash -s" < scripts/remote_deploy.sh
 
       - name: Verify Health
+        env:
+          TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
           ssh deploy-server << 'EOF'
             for i in {1..10}; do
