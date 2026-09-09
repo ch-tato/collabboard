@@ -91,13 +91,15 @@ jobs:
 
       - name: Verify Health
         run: |
-          for i in {1..10}; do
-            if curl -sf https://collabboard.lixyon.me/health; then
-              echo "Health check passed!"
-              exit 0
-            fi
-            echo "Health check failed, retrying in 3 seconds... ($i/10)"
-            sleep 3
-          done
-          echo "Deployment failed health check."
-          exit 1
+          ssh deploy-server << 'EOF'
+            for i in {1..10}; do
+              if curl -sf http://localhost:8080/health; then
+                echo "Health check passed!"
+                exit 0
+              fi
+              echo "Health check failed, retrying in 3 seconds... ($i/10)"
+              sleep 3
+            done
+            echo "Deployment failed health check."
+            exit 1
+          EOF
