@@ -75,8 +75,6 @@ jobs:
             IdentityFile ~/.ssh/id_ed25519
             ProxyCommand cloudflared access ssh --hostname %h
             StrictHostKeyChecking no
-            PubkeyAcceptedKeyTypes +ssh-rsa
-            HostkeyAlgorithms +ssh-rsa
           EOF
 
       - name: Deploy via SSH
